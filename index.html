@@ -1455,6 +1455,206 @@ footer{
     flex-direction:column;
     justify-content:center;
 }
+/* =========================================================
+   PROFESSIONAL PRODUCT / WISHLIST INTERACTIONS
+========================================================= */
+
+.product-image[role="button"]{
+    cursor:pointer;
+}
+
+.product-image[role="button"]:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+}
+
+.wishlist-drawer{
+    position:fixed;
+    right:0;
+    top:0;
+    width:min(440px,100%);
+    height:100%;
+    background:white;
+    z-index:1700;
+    transform:translateX(100%);
+    transition:var(--transition);
+    display:flex;
+    flex-direction:column;
+    box-shadow:-20px 0 60px rgba(0,0,0,.12);
+}
+
+.wishlist-drawer.active{
+    transform:translateX(0);
+}
+
+.wishlist-items{
+    flex:1;
+    overflow-y:auto;
+    padding:25px;
+}
+
+.empty-wishlist{
+    min-height:100%;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    color:#888;
+}
+
+.wishlist-item{
+    display:grid;
+    grid-template-columns:82px 1fr auto;
+    gap:15px;
+    align-items:center;
+    padding-bottom:20px;
+    margin-bottom:20px;
+    border-bottom:1px solid var(--border);
+}
+
+.wishlist-item img{
+    width:82px;
+    height:105px;
+    object-fit:cover;
+}
+
+.wishlist-item-name{
+    font-size:13px;
+    margin-bottom:7px;
+}
+
+.wishlist-item-price{
+    font-size:13px;
+    font-weight:700;
+}
+
+.wishlist-item-actions{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    align-items:flex-end;
+}
+
+.wishlist-item-actions button{
+    border:0;
+    background:none;
+    font-size:11px;
+    color:#777;
+}
+
+.wishlist-item-actions .wishlist-view{
+    color:var(--black);
+    text-decoration:underline;
+    text-underline-offset:3px;
+}
+
+.quick-option-group{
+    margin-bottom:18px;
+}
+
+.quick-option-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+}
+
+.quick-option-head label{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.size-error{
+    display:none;
+    color:var(--danger);
+    font-size:10px;
+}
+
+.size-error.show{
+    display:block;
+}
+
+.size-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+}
+
+.size-option{
+    min-height:44px;
+    border:1px solid var(--border);
+    background:white;
+    color:var(--black);
+    transition:var(--transition);
+}
+
+.size-option:hover,
+.size-option.selected{
+    background:var(--black);
+    color:white;
+    border-color:var(--black);
+}
+
+.quick-quantity{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.quantity-control{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--border);
+}
+
+.quantity-control button{
+    width:38px;
+    height:38px;
+    border:0;
+    background:white;
+    font-size:18px;
+}
+
+.quantity-control span{
+    min-width:35px;
+    text-align:center;
+    font-size:13px;
+}
+
+.quick-add-btn{
+    width:100%;
+}
+
+.cart-item-meta{
+    font-size:10px;
+    color:#888;
+    margin-top:4px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.cart-item-image-btn{
+    border:0;
+    padding:0;
+    background:none;
+    cursor:pointer;
+}
+
+.cart-item-image-btn img{
+    display:block;
+}
+
+@media(max-width:600px){
+    .wishlist-drawer{
+        width:100%;
+    }
+}
+
 
 .quick-info h2{
     font-family:"Playfair Display",serif;
@@ -1806,7 +2006,7 @@ footer{
                 ⌕
             </button>
 
-            <button class="icon-btn" onclick="showToast('Wishlist opened')" aria-label="Wishlist">
+            <button class="icon-btn" onclick="openWishlist()" aria-label="Wishlist">
                 ♡
                 <span class="badge" id="wishlistCount">0</span>
             </button>
@@ -2569,6 +2769,18 @@ footer{
 
 
 <!-- =====================================================
+     WISHLIST DRAWER
+===================================================== -->
+<aside class="wishlist-drawer" id="wishlistDrawer" aria-hidden="true">
+    <div class="drawer-header">
+        <div class="drawer-title">Wishlist</div>
+        <button class="close-btn" onclick="closeWishlist()" aria-label="Close wishlist">×</button>
+    </div>
+    <div class="wishlist-items" id="wishlistItems"></div>
+</aside>
+
+
+<!-- =====================================================
      SEARCH
 ===================================================== -->
 
@@ -2621,7 +2833,7 @@ footer{
      QUICK VIEW MODAL
 ===================================================== -->
 
-<div class="quick-modal" id="quickModal">
+<div class="quick-modal" id="quickModal" onclick="if(event.target===this) closeQuickView()">
 
     <div class="quick-box">
 
@@ -2660,16 +2872,31 @@ footer{
                 elegance and effortless style.
             </p>
 
-            <select class="size-select">
-                <option>Select Size</option>
-                <option>XS</option>
-                <option>S</option>
-                <option>M</option>
-                <option>L</option>
-                <option>XL</option>
-            </select>
+            <div class="quick-option-group">
+                <div class="quick-option-head">
+                    <label>Select Size</label>
+                    <span id="sizeError" class="size-error">Please select a size</span>
+                </div>
 
-            <button class="btn" id="quickAdd">
+                <div class="size-grid" id="quickSizeOptions">
+                    <button type="button" class="size-option" data-size="XS">XS</button>
+                    <button type="button" class="size-option" data-size="S">S</button>
+                    <button type="button" class="size-option" data-size="M">M</button>
+                    <button type="button" class="size-option" data-size="L">L</button>
+                    <button type="button" class="size-option" data-size="XL">XL</button>
+                </div>
+            </div>
+
+            <div class="quick-quantity">
+                <span>Quantity</span>
+                <div class="quantity-control">
+                    <button type="button" id="quickMinus" aria-label="Decrease quantity">−</button>
+                    <span id="quickQuantity">1</span>
+                    <button type="button" id="quickPlus" aria-label="Increase quantity">+</button>
+                </div>
+            </div>
+
+            <button class="btn quick-add-btn" id="quickAdd" type="button">
                 Add To Cart
             </button>
 
@@ -2852,9 +3079,7 @@ const products = [
    STATE
 ========================================================= */
 
-let cart = JSON.parse(localStorage.getItem("luxeCart")) || [];
-let wishlist = JSON.parse(localStorage.getItem("luxeWishlist")) || [];
-let currentFilter = "all";
+/* Cart / wishlist state is initialized below with safe localStorage handling. */
 
 
 /* =========================================================
@@ -2890,7 +3115,7 @@ function renderProducts(list = products, containerId = "productsGrid"){
 
         card.innerHTML = `
 
-            <div class="product-image">
+            <div class="product-image" onclick="openQuickView(${product.id})" role="button" tabindex="0" data-product-id="${product.id}" aria-label="View ${product.name}">
 
                 ${
                     product.badge
@@ -2906,7 +3131,7 @@ function renderProducts(list = products, containerId = "productsGrid"){
 
                     <button
                         class="wishlist-btn ${isLiked ? "active" : ""}"
-                        onclick="toggleWishlist(${product.id},this)"
+                        onclick="event.stopPropagation(); toggleWishlist(${product.id},this)"
                     >
                         ${isLiked ? "♥" : "♡"}
                     </button>
@@ -3073,137 +3298,132 @@ function sortProducts(type){
    CART
 ========================================================= */
 
-function addToCart(id){
+function safeStorageArray(key){
+    try{
+        const value = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(value) ? value : [];
+    }catch(error){
+        return [];
+    }
+}
 
-    const product = products.find(p => p.id === id);
+let cart = safeStorageArray("luxeCart");
+let wishlist = safeStorageArray("luxeWishlist").map(Number);
+let currentFilter = "all";
+let quickProductId = null;
+let selectedQuickSize = "";
+let quickQuantity = 1;
 
+function saveCart(){
+    localStorage.setItem("luxeCart",JSON.stringify(cart));
+}
+
+function saveWishlist(){
+    localStorage.setItem("luxeWishlist",JSON.stringify(wishlist));
+}
+
+function getProduct(id){
+    return products.find(product => Number(product.id) === Number(id));
+}
+
+function addToCart(id,size="One Size",quantity=1){
+    const product = getProduct(id);
     if(!product) return;
 
-    const existing = cart.find(item => item.id === id);
+    const normalizedSize = size || "One Size";
+    const qty = Math.max(1,Number(quantity) || 1);
+
+    const existing = cart.find(item =>
+        Number(item.id) === Number(id) &&
+        (item.size || "One Size") === normalizedSize
+    );
 
     if(existing){
-
-        existing.quantity++;
-
+        existing.quantity += qty;
     }else{
-
         cart.push({
             ...product,
-            quantity:1
+            size:normalizedSize,
+            quantity:qty
         });
-
     }
 
     saveCart();
-
     updateCartUI();
-
     showToast(`${product.name} added to your bag ✓`);
-
 }
-
-
-function saveCart(){
-
-    localStorage.setItem(
-        "luxeCart",
-        JSON.stringify(cart)
-    );
-
-}
-
 
 function updateCartUI(){
-
     const count = cart.reduce(
-        (total,item) => total + item.quantity,
+        (total,item) => total + (Number(item.quantity) || 0),
         0
     );
 
     document.getElementById("cartCount").textContent = count;
 
     const items = document.getElementById("cartItems");
+    if(!items) return;
 
     if(cart.length === 0){
-
         items.innerHTML = `
             <div class="empty-cart">
                 <div>
-                    <div style="font-size:40px;margin-bottom:15px;">
-                        🛍
-                    </div>
+                    <div style="font-size:40px;margin-bottom:15px;">🛍</div>
                     <h3>Your bag is empty</h3>
-                    <p style="margin-top:10px;">
-                        Discover something you love.
-                    </p>
+                    <p style="margin-top:10px;">Discover something you love.</p>
                 </div>
             </div>
         `;
 
         document.getElementById("cartTotal").textContent = "$0.00";
-
         document.getElementById("shippingMessage").textContent =
             "Add $100.00 more for FREE SHIPPING";
-
         return;
     }
 
     let total = 0;
-
     items.innerHTML = "";
 
-    cart.forEach(item => {
-
-        total += item.price * item.quantity;
+    cart.forEach((item,index) => {
+        const quantity = Math.max(1,Number(item.quantity) || 1);
+        const price = Number(item.price) || 0;
+        total += price * quantity;
 
         const div = document.createElement("div");
-
         div.className = "cart-item";
 
         div.innerHTML = `
-
-            <img
-                src="${item.image}"
-                alt="${item.name}"
+            <button
+                class="cart-item-image-btn"
+                type="button"
+                onclick="openQuickView(${item.id})"
+                aria-label="View ${item.name}"
             >
+                <img src="${item.image}" alt="${item.name}">
+            </button>
 
             <div>
-
-                <div class="cart-item-name">
-                    ${item.name}
-                </div>
-
-                <div class="cart-item-price">
-                    $${item.price.toFixed(2)}
-                </div>
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-meta">Size: ${item.size || "One Size"}</div>
+                <div class="cart-item-price">$${price.toFixed(2)}</div>
 
                 <div class="quantity">
-
-                    <button onclick="changeQuantity(${item.id},-1)">
-                        −
-                    </button>
-
-                    <span>${item.quantity}</span>
-
-                    <button onclick="changeQuantity(${item.id},1)">
-                        +
-                    </button>
-
+                    <button type="button" onclick="changeQuantity(${index},-1)">−</button>
+                    <span>${quantity}</span>
+                    <button type="button" onclick="changeQuantity(${index},1)">+</button>
                 </div>
-
             </div>
 
             <button
                 class="remove-item"
-                onclick="removeFromCart(${item.id})"
+                type="button"
+                onclick="removeFromCart(${index})"
             >
                 Remove
             </button>
-
         `;
 
         items.appendChild(div);
-
     });
 
     document.getElementById("cartTotal").textContent =
@@ -3215,150 +3435,258 @@ function updateCartUI(){
         remaining > 0
         ? `Add $${remaining.toFixed(2)} more for FREE SHIPPING`
         : "🎉 You unlocked FREE SHIPPING!";
-
 }
 
-
-function changeQuantity(id,amount){
-
-    const item = cart.find(p => p.id === id);
-
+function changeQuantity(index,amount){
+    const item = cart[index];
     if(!item) return;
 
-    item.quantity += amount;
+    item.quantity = (Number(item.quantity) || 0) + amount;
 
     if(item.quantity <= 0){
-
-        cart = cart.filter(p => p.id !== id);
-
+        cart.splice(index,1);
     }
 
     saveCart();
-
     updateCartUI();
-
 }
 
+function removeFromCart(index){
+    if(!cart[index]) return;
 
-function removeFromCart(id){
-
-    cart = cart.filter(p => p.id !== id);
+    const name = cart[index].name;
+    cart.splice(index,1);
 
     saveCart();
-
     updateCartUI();
-
-    showToast("Product removed from your bag");
-
+    showToast(`${name} removed from your bag`);
 }
-
 
 function openCart(){
+    closeWishlist();
+    closeSearch();
+    closeQuickView();
 
     document.getElementById("cartDrawer").classList.add("active");
-
     document.getElementById("overlay").classList.add("active");
-
     document.body.classList.add("no-scroll");
-
 }
-
 
 function closeCart(){
-
     document.getElementById("cartDrawer").classList.remove("active");
 
-    document.getElementById("overlay").classList.remove("active");
-
-    document.body.classList.remove("no-scroll");
-
+    if(
+        !document.getElementById("wishlistDrawer").classList.contains("active") &&
+        !document.getElementById("quickModal").classList.contains("active") &&
+        !document.getElementById("searchPanel").classList.contains("active")
+    ){
+        document.getElementById("overlay").classList.remove("active");
+        document.body.classList.remove("no-scroll");
+    }
 }
-
 
 /* =========================================================
    WISHLIST
 ========================================================= */
 
-function toggleWishlist(id,button){
-
-    if(wishlist.includes(id)){
-
-        wishlist = wishlist.filter(item => item !== id);
-
-        button.classList.remove("active");
-
-        button.textContent = "♡";
-
-        showToast("Removed from wishlist");
-
-    }else{
-
-        wishlist.push(id);
-
-        button.classList.add("active");
-
-        button.textContent = "♥";
-
-        showToast("Added to wishlist ♥");
-
-    }
-
-    localStorage.setItem(
-        "luxeWishlist",
-        JSON.stringify(wishlist)
-    );
-
-    document.getElementById("wishlistCount").textContent =
-        wishlist.length;
-
+function updateWishlistCount(){
+    document.getElementById("wishlistCount").textContent = wishlist.length;
 }
 
+function toggleWishlist(id,button){
+    id = Number(id);
+
+    if(wishlist.includes(id)){
+        wishlist = wishlist.filter(item => Number(item) !== id);
+
+        if(button){
+            button.classList.remove("active");
+            button.textContent = "♡";
+        }
+
+        showToast("Removed from wishlist");
+    }else{
+        wishlist.push(id);
+
+        if(button){
+            button.classList.add("active");
+            button.textContent = "♥";
+        }
+
+        showToast("Added to wishlist ♥");
+    }
+
+    saveWishlist();
+    updateWishlistCount();
+    renderWishlist();
+}
+
+function openWishlist(){
+    closeCart();
+    closeSearch();
+    closeQuickView();
+
+    renderWishlist();
+
+    document.getElementById("wishlistDrawer").classList.add("active");
+    document.getElementById("wishlistDrawer").setAttribute("aria-hidden","false");
+    document.getElementById("overlay").classList.add("active");
+    document.body.classList.add("no-scroll");
+}
+
+function closeWishlist(){
+    const drawer = document.getElementById("wishlistDrawer");
+    if(!drawer) return;
+
+    drawer.classList.remove("active");
+    drawer.setAttribute("aria-hidden","true");
+
+    if(
+        !document.getElementById("cartDrawer").classList.contains("active") &&
+        !document.getElementById("quickModal").classList.contains("active") &&
+        !document.getElementById("searchPanel").classList.contains("active")
+    ){
+        document.getElementById("overlay").classList.remove("active");
+        document.body.classList.remove("no-scroll");
+    }
+}
+
+function renderWishlist(){
+    const container = document.getElementById("wishlistItems");
+    if(!container) return;
+
+    const likedProducts = wishlist
+        .map(id => getProduct(id))
+        .filter(Boolean);
+
+    if(likedProducts.length === 0){
+        container.innerHTML = `
+            <div class="empty-wishlist">
+                <div>
+                    <div style="font-size:42px;margin-bottom:15px;">♡</div>
+                    <h3>Your wishlist is empty</h3>
+                    <p style="margin-top:10px;">Save pieces you love for later.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    likedProducts.forEach(product => {
+        const item = document.createElement("div");
+        item.className = "wishlist-item";
+
+        item.innerHTML = `
+            <img src="${product.image}" alt="${product.name}">
+
+            <div>
+                <div class="wishlist-item-name">${product.name}</div>
+                <div class="wishlist-item-price">$${product.price.toFixed(2)}</div>
+            </div>
+
+            <div class="wishlist-item-actions">
+                <button
+                    type="button"
+                    class="wishlist-view"
+                    onclick="openQuickView(${product.id})"
+                >
+                    View
+                </button>
+
+                <button
+                    type="button"
+                    onclick="toggleWishlist(${product.id})"
+                >
+                    Remove
+                </button>
+            </div>
+        `;
+
+        container.appendChild(item);
+    });
+}
 
 /* =========================================================
    QUICK VIEW
 ========================================================= */
 
 function openQuickView(id){
-
-    const product = products.find(p => p.id === id);
-
+    const product = getProduct(id);
     if(!product) return;
 
-    document.getElementById("quickImage").src =
-        product.image;
+    quickProductId = product.id;
+    selectedQuickSize = "";
+    quickQuantity = 1;
 
-    document.getElementById("quickName").textContent =
-        product.name;
-
+    document.getElementById("quickImage").src = product.image;
+    document.getElementById("quickImage").alt = product.name;
+    document.getElementById("quickName").textContent = product.name;
     document.getElementById("quickPrice").textContent =
         `$${product.price.toFixed(2)}`;
 
-    document.getElementById("quickAdd").onclick =
-        function(){
+    document.getElementById("quickQuantity").textContent = "1";
+    document.getElementById("sizeError").classList.remove("show");
 
-            addToCart(product.id);
+    document.querySelectorAll(".size-option").forEach(option => {
+        option.classList.remove("selected");
 
-            closeQuickView();
+        option.onclick = function(){
+            selectedQuickSize = this.dataset.size;
 
+            document.querySelectorAll(".size-option")
+                .forEach(btn => btn.classList.remove("selected"));
+
+            this.classList.add("selected");
+            document.getElementById("sizeError").classList.remove("show");
         };
+    });
 
-    document.getElementById("quickModal")
-        .classList.add("active");
+    document.getElementById("quickMinus").onclick = function(){
+        quickQuantity = Math.max(1,quickQuantity - 1);
+        document.getElementById("quickQuantity").textContent = quickQuantity;
+    };
 
+    document.getElementById("quickPlus").onclick = function(){
+        quickQuantity = Math.min(10,quickQuantity + 1);
+        document.getElementById("quickQuantity").textContent = quickQuantity;
+    };
+
+    document.getElementById("quickAdd").onclick = function(){
+        if(!selectedQuickSize){
+            document.getElementById("sizeError").classList.add("show");
+            return;
+        }
+
+        addToCart(product.id,selectedQuickSize,quickQuantity);
+        closeQuickView();
+        openCart();
+    };
+
+    closeCart();
+    closeWishlist();
+    closeSearch();
+
+    document.getElementById("quickModal").classList.add("active");
     document.body.classList.add("no-scroll");
-
 }
-
 
 function closeQuickView(){
+    const modal = document.getElementById("quickModal");
+    if(!modal) return;
 
-    document.getElementById("quickModal")
-        .classList.remove("active");
+    modal.classList.remove("active");
 
-    document.body.classList.remove("no-scroll");
-
+    if(
+        !document.getElementById("cartDrawer").classList.contains("active") &&
+        !document.getElementById("wishlistDrawer").classList.contains("active") &&
+        !document.getElementById("searchPanel").classList.contains("active")
+    ){
+        document.getElementById("overlay").classList.remove("active");
+        document.body.classList.remove("no-scroll");
+    }
 }
-
 
 /* =========================================================
    SEARCH
@@ -3765,9 +4093,8 @@ renderProducts(
 );
 
 updateCartUI();
-
-document.getElementById("wishlistCount").textContent =
-    wishlist.length;
+updateWishlistCount();
+renderWishlist();
 
 
 /* =========================================================
